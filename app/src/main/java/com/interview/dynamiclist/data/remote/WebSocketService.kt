@@ -5,10 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.interview.dynamiclist.data.model.BaseEventModel
-import com.interview.dynamiclist.data.model.BaseEventModel.Companion.fromJsonToObject
 import com.interview.dynamiclist.data.model.FeedEventModel
 import com.interview.dynamiclist.data.remote.filter.FeedFilterAPIService
 import com.interview.dynamiclist.util.AppUtil
+import com.interview.dynamiclist.util.Resource
 import okhttp3.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,8 +17,8 @@ import javax.inject.Singleton
 class WebSocketService @Inject constructor (val feedEventClient : OkHttpClient, val gson : Gson) : WebSocketListener(), RemoteDataSource {
     private val  TAG = "WebSocketService"
 
-    private val _feedEventSocket = MutableLiveData<FeedEventModel>()
-    val feedEventSocket:LiveData<FeedEventModel>
+    private val _feedEventSocket = MutableLiveData<Resource<FeedEventModel>>()
+    val feedEventSocket:LiveData<Resource<FeedEventModel>>
        get() = _feedEventSocket
 
     private var isConnected = false
@@ -55,6 +55,10 @@ class WebSocketService @Inject constructor (val feedEventClient : OkHttpClient, 
     ) {
         super.onFailure(webSocket, t, response)
         Log.d(TAG, "onFailure: " + response + webSocket + t.message)
+        val code = response?.code ?: if (t != null) 400 else 0
+        val message =
+            response?.message ?: if (t != null) t.message else "null"
+        _feedEventSocket.postValue (Resource.error(code.toString() + "," + t.message, null))
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -78,7 +82,8 @@ class WebSocketService @Inject constructor (val feedEventClient : OkHttpClient, 
         )
         if (isConnected && FeedFilterAPIService.isMatchType(feedEventModel)) {
             Log.d(TAG, "handleMessage: match pass for feed weight ${feedEventModel.weight}")
-            _feedEventSocket.postValue(feedEventModel)
+            //_feedEventSocket.postValue(feedEventModel)
+            _feedEventSocket.postValue(Resource.success(feedEventModel))
         }
 
     }

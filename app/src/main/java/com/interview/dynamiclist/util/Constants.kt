@@ -7,5 +7,8 @@ class Constants {
         const val HOST_URL = "superdo-groceries.herokuapp.com"
 
         const val FULL_WEB_SOCKET_URL = "wss://superdo-groceries.herokuapp.com/receive"
+
+        const val BUTTON_STATE = "button_state"
+        const val FEEDS = "feeds"
     }
 }
